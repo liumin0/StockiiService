@@ -5,7 +5,6 @@ from rest_framework.renderers import JSONRenderer
 from django.http import HttpResponse
 import sys, os, imp
 
-
 __CURDIR__ = os.path.dirname(os.path.abspath(__file__))
 class JSONResponse(HttpResponse):
     """
@@ -20,7 +19,6 @@ def importModule(name):
     if name in sys.modules:
         return sys.modules[name]
     modulePath = os.path.join(__CURDIR__, 'services', name, '__init__.py')
-    print modulePath
     ret = None
     try:
         scheme = imp.load_source(name, modulePath)
@@ -40,6 +38,7 @@ def processRequest(request, api):
     print request.GET
     print request.POST
     apiName = api
+    print 'API=',apiName
     if request.method == 'GET':
         args = request.GET
     else:
@@ -47,7 +46,10 @@ def processRequest(request, api):
         
     module = importModule(apiName)
     if module is not None:
-        ret = module.run(args)
+        try:
+            success, ret = module.run(args)
+        except:
+            return JSONResponse('Error occured')
         return JSONResponse(ret)
        
     return JSONResponse('No api', status=status.HTTP_404_NOT_FOUND)
